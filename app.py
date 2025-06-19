@@ -1,7 +1,7 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 import pandas as pd
-from st_aggrid import AgGrid, GridOptionsBuilder
+from st_aggrid import AgGrid, GridOptionsBuilder,GridUpdateMode
 import io as io_module
 from ramis_cleaning import ramis_cleaning_fun
 
@@ -21,6 +21,17 @@ selected = option_menu(
     menu_icon="gear", default_index=0
 )
 
+# def show_aggrid(df):
+#     gb = GridOptionsBuilder.from_dataframe(df)
+#     gb.configure_default_column(groupable=True, value=True, enableRowGroup=True, aggFunc='sum')
+#     gb.configure_pagination(enabled=True, paginationPageSize=10)
+#     gb.configure_selection(selection_mode="multiple", use_checkbox=True)
+#     gb.configure_side_bar(filters_panel=True)
+#     grid_options = gb.build()
+
+#     AgGrid(df, gridOptions=grid_options, height=400, width='100%', allow_unsafe_jscode=True)
+
+
 def show_aggrid(df):
     gb = GridOptionsBuilder.from_dataframe(df)
     gb.configure_default_column(groupable=True, value=True, enableRowGroup=True, aggFunc='sum')
@@ -29,7 +40,14 @@ def show_aggrid(df):
     gb.configure_side_bar(filters_panel=True)
     grid_options = gb.build()
 
-    AgGrid(df, gridOptions=grid_options, height=400, width='100%', allow_unsafe_jscode=True)
+    AgGrid(
+        df,
+        gridOptions=grid_options,
+        update_mode=GridUpdateMode.NO_UPDATE,  # ✅ Key change
+        height=400,
+        width='100%',
+        allow_unsafe_jscode=True
+    )
 
 # === Cleaning Functions (Customize as per your logic) ===
 def clean_ramis(df):
@@ -47,11 +65,13 @@ if selected == "Ramis Cleaning":
         if st.button("Clean RAMIS Data"):
             with st.spinner("Cleaning RAMIS data..."):
                 Feedback_ramis_1,Feedback_ramis_2=clean_ramis(df)
-                st.subheader("📝 Feedback 1")
-                show_aggrid(Feedback_ramis_1)
-
-                st.subheader("📝 Feedback 2")
-                show_aggrid(Feedback_ramis_2)
+                
+                with st.expander("📝 Feedback 1", expanded=True):
+                    show_aggrid(Feedback_ramis_1)
+                
+                with st.expander("📝 Feedback 2", expanded=True):
+                    show_aggrid(Feedback_ramis_2)
+                
                 
                 output = io_module.BytesIO()
                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
