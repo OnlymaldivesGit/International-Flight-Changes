@@ -2,7 +2,7 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 import pandas as pd
 from st_aggrid import AgGrid, GridOptionsBuilder
-import io
+import io as io_module
 from ramis_cleaning import ramis_cleaning_fun
 
 st.set_page_config(page_title="Data Cleaner", layout="wide")
@@ -53,7 +53,7 @@ if selected == "Ramis Cleaning":
                 st.subheader("📝 Feedback 2")
                 show_aggrid(Feedback_ramis_2)
                 
-                output = io.BytesIO()
+                output = io_module.BytesIO()
                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                     Feedback_ramis_1.to_excel(writer, sheet_name='Feedback 1', index=False)
                     Feedback_ramis_2.to_excel(writer, sheet_name='Feedback 2', index=False)
