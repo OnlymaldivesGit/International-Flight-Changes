@@ -4,6 +4,9 @@ import pandas as pd
 from st_aggrid import AgGrid, GridOptionsBuilder,GridUpdateMode
 import io as io_module
 from ramis_cleaning import ramis_cleaning_fun
+from macl_cleaning import macl_cleaning_fun
+
+
 
 st.set_page_config(page_title="Data Cleaner", layout="wide")
 
@@ -21,15 +24,6 @@ selected = option_menu(
     menu_icon="gear", default_index=0
 )
 
-# def show_aggrid(df):
-#     gb = GridOptionsBuilder.from_dataframe(df)
-#     gb.configure_default_column(groupable=True, value=True, enableRowGroup=True, aggFunc='sum')
-#     gb.configure_pagination(enabled=True, paginationPageSize=10)
-#     gb.configure_selection(selection_mode="multiple", use_checkbox=True)
-#     gb.configure_side_bar(filters_panel=True)
-#     grid_options = gb.build()
-
-#     AgGrid(df, gridOptions=grid_options, height=400, width='100%', allow_unsafe_jscode=True)
 
 
 def show_aggrid(df):
@@ -54,6 +48,10 @@ def clean_ramis(df):
     Feedback_ramis_1,Feedback_ramis_2=ramis_cleaning_fun(df, curr_date, Start_Period_date,End_Period_date )
     return Feedback_ramis_1,Feedback_ramis_2
 
+def clean_macl(df):
+    Feedback_macl_1,Feedback_macl_2=macl_cleaning_fun(df, curr_date, Start_Period_date,End_Period_date )
+    return Feedback_macl_1,Feedback_macl_2
+
 
 
 # === Main Views ===
@@ -77,6 +75,34 @@ if selected == "Ramis Cleaning":
                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                     Feedback_ramis_1.to_excel(writer, sheet_name='Feedback 1', index=False)
                     Feedback_ramis_2.to_excel(writer, sheet_name='Feedback 2', index=False)
+                output.seek(0)
+
+                st.download_button(
+                    label="📥 Download Feedback Excel",
+                    data=output,
+                    file_name="ramis_feedback.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+elif selected == "MACL Cleaning":
+    st.title("🧹 MACL Data Cleaner")
+    uploaded_file = st.file_uploader("Upload MACL Excel File", type=["xlsx"])
+    if uploaded_file:
+        df = pd.read_excel(uploaded_file,sheet_name="Data")
+        if st.button("Clean MACL Data"):
+            with st.spinner("Cleaning RAMIS data..."):
+                Feedback_macl_1,Feedback_macl_2=clean_macl(df)
+                
+                with st.expander("📝 Feedback 1", expanded=True):
+                    show_aggrid(Feedback_macl_1)
+                
+                with st.expander("📝 Feedback 2", expanded=True):
+                    show_aggrid(Feedback_macl_2)
+                
+                
+                output = io_module.BytesIO()
+                with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                    Feedback_macl_1.to_excel(writer, sheet_name='Feedback 1', index=False)
+                    Feedback_macl_2.to_excel(writer, sheet_name='Feedback 2', index=False)
                 output.seek(0)
 
                 st.download_button(

@@ -1,43 +1,9 @@
 import pandas as pd
-from datetime import datetime, timedelta, date
-import calendar
-import random
-import string
 import numpy as np
 
+from ramis_functions import count_weekdays, group_date_ranges
+
 invalid_values = ['ARRTBA', 'DEPTBA', 'DMLED', 'MLE', 'MLED', 'RESARR', 'RESDEP','DMLE']
-
-weekday_map = {
-    'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3,
-    'Friday': 4, 'Saturday': 5, 'Sunday': 6
-}
-
-
-
-def count_weekdays(start, end, weekday_name):
-  try:
-    weekday_num = weekday_map[weekday_name]
-    dates = pd.date_range(start, end, freq='D')
-    return sum(d.weekday() == weekday_num for d in dates)
-  except:
-    return 0
-
-
-def group_date_ranges(dates, expected_gap_days=7):
-    dates = pd.to_datetime(dates)
-    dates = pd.Series(dates).sort_values().reset_index(drop=True)
-
-    groups = []
-    start = dates[0]
-
-    for i in range(1, len(dates)):
-        gap = (dates[i] - dates[i-1]).days
-        if gap != expected_gap_days:
-            groups.append(f"{start.date()} - {dates[i-1].date()}")
-            start = dates[i]
-    groups.append(f"{start.date()} - {dates.iloc[-1].date()}")
-
-    return groups
 
 
 def ramis_cleaning_fun(ramis_int, curr_date, Start_Period_date,End_Period_date):
@@ -100,8 +66,10 @@ def ramis_cleaning_fun(ramis_int, curr_date, Start_Period_date,End_Period_date):
         lambda row: "This Flight is being Scheduled for Multiple different timings in a single day" if row["Total count"] == row["Unique count"] else "This Flight is being Scheduled for Multiple same timings in a single day",
         axis=1
     )
-    Feedback_ramis_2.drop(["Total count","Unique count"],axis=1,inplace=True)
-    Feedback_ramis_2 = Feedback_ramis_2.groupby(["Flight ID",  "Feedback"])["Flight Date"].agg(list).reset_index()
+
+    Feedback_ramis_2["Weekday"] = Feedback_ramis_2["Flight Date"].apply(lambda x: x.strftime('%A'))
+    Feedback_ramis_2=Feedback_ramis_2[["Flight ID", "Feedback","Flight Date","Weekday"]]
+    Feedback_ramis_2 = Feedback_ramis_2.groupby(["Flight ID","Weekday", "Feedback"]).agg(list).reset_index()
     Feedback_ramis_2["Flight_Date"] = Feedback_ramis_2["Flight Date"].apply(group_date_ranges)
     Feedback_ramis_2.drop(columns=["Flight Date"], inplace=True)
     Feedback_ramis_2=Feedback_ramis_2.explode("Flight_Date").reset_index(drop=True)
