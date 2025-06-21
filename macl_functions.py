@@ -100,20 +100,3 @@ def expanded_macl(macl_int):
     macl_expanded["Date"] = pd.to_datetime(macl_expanded["Date"]).dt.date
 
     return macl_expanded
-
-
-def group_date_ranges(dates, expected_gap_days=7):
-    dates = pd.to_datetime(dates)
-    dates = pd.Series(dates).sort_values().reset_index(drop=True)
-
-    groups = []
-    start = dates[0]
-
-    for i in range(1, len(dates)):
-        gap = (dates[i] - dates[i-1]).days
-        if gap != expected_gap_days:
-            groups.append(f"{start.date()} - {dates[i-1].date()}")
-            start = dates[i]
-    groups.append(f"{start.date()} - {dates.iloc[-1].date()}")
-
-    return groups

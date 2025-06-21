@@ -1,8 +1,9 @@
 import pandas as pd
 import numpy as np
 
-from macl_functions import extract_start_end,transform_flt_code,classify_direction,replace_flt_no,split_list,convert_to_time,expanded_macl,group_date_ranges
- 
+from macl_functions import extract_start_end,transform_flt_code,classify_direction,replace_flt_no,split_list,convert_to_time,expanded_macl
+from ramis_functions import group_date_ranges
+
 
 def macl_cleaning_fun(macl_data, curr_date, Start_Period_date,End_Period_date):
 
@@ -137,4 +138,4 @@ def macl_cleaning_fun(macl_data, curr_date, Start_Period_date,End_Period_date):
     Feedback_macl_2=Feedback_macl_2.explode("Flight_Date").reset_index(drop=True)
     Feedback_macl_2
     
-    return Feedback_macl_1,Feedback_macl_2
+    return Feedback_macl_1,Feedback_macl_2,macl_expanded

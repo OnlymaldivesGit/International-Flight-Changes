@@ -5,6 +5,7 @@ from st_aggrid import AgGrid, GridOptionsBuilder,GridUpdateMode
 import io as io_module
 from ramis_cleaning import ramis_cleaning_fun
 from macl_cleaning import macl_cleaning_fun
+from comparison import comparison_fun
 
 
 
@@ -45,12 +46,18 @@ def show_aggrid(df):
 
 # === Cleaning Functions (Customize as per your logic) ===
 def clean_ramis(df):
-    Feedback_ramis_1,Feedback_ramis_2=ramis_cleaning_fun(df, curr_date, Start_Period_date,End_Period_date )
-    return Feedback_ramis_1,Feedback_ramis_2
+    Feedback_ramis_1,Feedback_ramis_2,expanded_ramis=ramis_cleaning_fun(df, curr_date, Start_Period_date,End_Period_date )
+    return Feedback_ramis_1,Feedback_ramis_2,expanded_ramis
 
 def clean_macl(df):
-    Feedback_macl_1,Feedback_macl_2=macl_cleaning_fun(df, curr_date, Start_Period_date,End_Period_date )
-    return Feedback_macl_1,Feedback_macl_2
+    Feedback_macl_1,Feedback_macl_2,macl_expanded=macl_cleaning_fun(df, curr_date, Start_Period_date,End_Period_date )
+    return Feedback_macl_1,Feedback_macl_2,macl_expanded
+
+def changes(df1,df2):
+    clubbed_added,clubbed_modified,clubbed_deleted=comparison_fun(df1,df2, curr_date, Start_Period_date,End_Period_date)
+    return clubbed_added,clubbed_modified,clubbed_deleted
+
+
 
 
 
@@ -62,7 +69,7 @@ if selected == "Ramis Cleaning":
         df = pd.read_excel(uploaded_file,sheet_name="Connecting Flight Plans")
         if st.button("Clean RAMIS Data"):
             with st.spinner("Cleaning RAMIS data..."):
-                Feedback_ramis_1,Feedback_ramis_2=clean_ramis(df)
+                Feedback_ramis_1,Feedback_ramis_2,expanded_ramis=clean_ramis(df)
                 
                 with st.expander("📝 Feedback 1", expanded=True):
                     show_aggrid(Feedback_ramis_1)
@@ -90,7 +97,7 @@ elif selected == "MACL Cleaning":
         df = pd.read_excel(uploaded_file,sheet_name="Data")
         if st.button("Clean MACL Data"):
             with st.spinner("Cleaning RAMIS data..."):
-                Feedback_macl_1,Feedback_macl_2=clean_macl(df)
+                Feedback_macl_1,Feedback_macl_2,macl_expanded=clean_macl(df)
                 
                 with st.expander("📝 Feedback 1", expanded=True):
                     show_aggrid(Feedback_macl_1)
@@ -109,5 +116,40 @@ elif selected == "MACL Cleaning":
                     label="📥 Download Feedback Excel",
                     data=output,
                     file_name="ramis_feedback.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+
+elif selected == "International Flight Changes":
+    st.title("🧹 International Flight Changes")
+    uploaded_file_1 = st.file_uploader("Upload Ramis Excel File", type=["xlsx"])
+    uploaded_file_2 = st.file_uploader("Upload MACL File", type=["xlsx"])
+    if uploaded_file_1 and uploaded_file_2:
+        df_ramis = pd.read_excel(uploaded_file_1,sheet_name="Connecting Flight Plans")
+        df_macl = pd.read_excel(uploaded_file_2,sheet_name="Data")
+        if st.button("Find Changes"):
+            with st.spinner("Looking for Changes ..."):
+                clubbed_added,clubbed_modified,clubbed_deleted=changes(df_ramis,df_macl)
+                
+                with st.expander("📝 New Added Flights", expanded=True):
+                    show_aggrid(clubbed_added)
+                
+                with st.expander("📝 Deleted Flights", expanded=True):
+                    show_aggrid(clubbed_deleted)
+
+                with st.expander("📝 Modified Flights", expanded=True):
+                    show_aggrid(clubbed_modified)
+                
+                
+                output = io_module.BytesIO()
+                with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                    clubbed_added.to_excel(writer, sheet_name='New Flights', index=False)
+                    clubbed_deleted.to_excel(writer, sheet_name='Deleted Flights', index=False)
+                    clubbed_modified.to_excel(writer, sheet_name='Modified Flights', index=False)
+                output.seek(0)
+
+                st.download_button(
+                    label="📥 Download Change sheet",
+                    data=output,
+                    file_name="Changes.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )

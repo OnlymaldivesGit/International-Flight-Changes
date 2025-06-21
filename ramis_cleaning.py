@@ -75,4 +75,4 @@ def ramis_cleaning_fun(ramis_int, curr_date, Start_Period_date,End_Period_date):
     Feedback_ramis_2=Feedback_ramis_2.explode("Flight_Date").reset_index(drop=True)
     Feedback_ramis_2
 
-    return Feedback_ramis_1,Feedback_ramis_2
+    return Feedback_ramis_1,Feedback_ramis_2,expanded_ramis
