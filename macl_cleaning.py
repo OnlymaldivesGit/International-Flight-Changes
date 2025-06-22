@@ -9,8 +9,8 @@ def macl_cleaning_fun(macl_data, curr_date, Start_Period_date,End_Period_date):
 
     # Step-1 : Convert the Effective Date to Start and End Date and see if any issues
     macl_data[['Start Date', 'End Date']] = macl_data['EFFECTIVE'].apply(extract_start_end)
-    macl_data['Start Date'] = pd.to_datetime(macl_data['Start Date'], dayfirst=True, errors='coerce')
-    macl_data['End Date'] = pd.to_datetime(macl_data['End Date'], dayfirst=True, errors='coerce')
+    macl_data['Start Date'] = pd.to_datetime(macl_data['Start Date'], format='%d.%m.%y', dayfirst=True, errors='coerce')
+    macl_data['End Date'] = pd.to_datetime(macl_data['End Date'], format='%d.%m.%y', dayfirst=True, errors='coerce')
     macl_data["Date error"]=macl_data["Start Date"].isna() | macl_data["End Date"].isna()
 
 
@@ -40,9 +40,9 @@ def macl_cleaning_fun(macl_data, curr_date, Start_Period_date,End_Period_date):
     macl_data['FLT NO'] = macl_data['FLT NO'].str.split(r'\s*-\s*')
     macl_data[['First_Flt', 'Second_Flt']] = macl_data['FLT NO'].apply(split_list)
 
-
     # First Feedback: Tells about error in Date or Time format
-    Feedback_macl_1=macl_data[(macl_data["Date error"]==True) | (macl_data["Time error"]==True)]
+    Feedback_macl_1 = macl_data.copy()
+    Feedback_macl_1=Feedback_macl_1[(Feedback_macl_1["Date error"]==True) | (Feedback_macl_1["Time error"]==True)]
     Feedback_macl_1.drop(['First_Flt', 'Second_Flt','First_Direction', 'Second_Direction','Direction','Start Date', 'End Date'],axis=1,inplace=True)
 
 
@@ -50,21 +50,21 @@ def macl_cleaning_fun(macl_data, curr_date, Start_Period_date,End_Period_date):
 
     arrivals_1 = macl_data[macl_data['First_Direction'] == 'Arrival'][[
     'AIRLINE', 'DAYS OF OPS', 'A/C TYPE', 'ROUTE', 'SEATS',
-    'Category',  'Start Date', 'End Date', 'First_Flt', 'STA'
+      'Start Date', 'End Date', 'First_Flt', 'STA'
     ]].copy()
     arrivals_1.columns = [
         'AIRLINE', 'DAYS OF OPS', 'A/C TYPE', 'ROUTE', 'SEATS',
-        'Category',  'Start Date', 'End Date', 'Flight Code', 'Time'
+          'Start Date', 'End Date', 'Flight Code', 'Time'
     ]
     arrivals_1['Type'] = 'Arrival'
 
     arrivals_2 = macl_data[macl_data['Second_Direction'] == 'Arrival'][[
         'AIRLINE', 'DAYS OF OPS', 'A/C TYPE', 'ROUTE', 'SEATS',
-        'Category',  'Start Date', 'End Date', 'Second_Flt', 'STA'
+         'Start Date', 'End Date', 'Second_Flt', 'STA'
     ]].copy()
     arrivals_2.columns = [
         'AIRLINE', 'DAYS OF OPS', 'A/C TYPE', 'ROUTE', 'SEATS',
-        'Category',  'Start Date', 'End Date', 'Flight Code', 'Time'
+          'Start Date', 'End Date', 'Flight Code', 'Time'
     ]
     arrivals_2['Type'] = 'Arrival'
 
@@ -73,21 +73,21 @@ def macl_cleaning_fun(macl_data, curr_date, Start_Period_date,End_Period_date):
     # DEPARTURES
     departures_1 = macl_data[macl_data['First_Direction'] == 'Departure'][[
         'AIRLINE', 'DAYS OF OPS', 'A/C TYPE', 'ROUTE', 'SEATS',
-        'Category',  'Start Date', 'End Date', 'First_Flt', 'STD'
+          'Start Date', 'End Date', 'First_Flt', 'STD'
     ]].copy()
     departures_1.columns = [
         'AIRLINE', 'DAYS OF OPS', 'A/C TYPE', 'ROUTE', 'SEATS',
-        'Category',  'Start Date', 'End Date', 'Flight Code', 'Time'
+         'Start Date', 'End Date', 'Flight Code', 'Time'
     ]
     departures_1['Type'] = 'Departure'
 
     departures_2 = macl_data[macl_data['Second_Direction'] == 'Departure'][[
         'AIRLINE', 'DAYS OF OPS', 'A/C TYPE', 'ROUTE', 'SEATS',
-        'Category',  'Start Date', 'End Date', 'Second_Flt', 'STD'
+          'Start Date', 'End Date', 'Second_Flt', 'STD'
     ]].copy()
     departures_2.columns = [
         'AIRLINE', 'DAYS OF OPS', 'A/C TYPE', 'ROUTE', 'SEATS',
-        'Category',  'Start Date', 'End Date', 'Flight Code', 'Time'
+          'Start Date', 'End Date', 'Flight Code', 'Time'
     ]
     departures_2['Type'] = 'Departure'
 
@@ -122,20 +122,24 @@ def macl_cleaning_fun(macl_data, curr_date, Start_Period_date,End_Period_date):
     Feedback_macl_2 = Feedback_macl_2.groupby(["Flight Code", "Date"])[["Time"]].agg(list).reset_index()
     Feedback_macl_2["Count1"]=Feedback_macl_2["Time"].apply(len)
     Feedback_macl_2=Feedback_macl_2[Feedback_macl_2["Count1"]>1]
-    Feedback_macl_2["unique"]=Feedback_macl_2["Time"].apply(lambda x: list(np.unique(x)))
-    Feedback_macl_2["Count2"]=Feedback_macl_2["unique"].apply(len)
-    Feedback_macl_2["Feedback"] = Feedback_macl_2.apply(
-        lambda row: "Same Flight Multiple time" if row["Count1"] == row["Count2"] else "Duplicate Entries",
-        axis=1
-    )
-    Feedback_macl_2["Weekday"] = Feedback_macl_2["Date"].apply(lambda x: x.strftime('%A'))
+    if not Feedback_macl_2.empty:
+        Feedback_macl_2["unique"]=Feedback_macl_2["Time"].apply(lambda x: list(np.unique(x)))
+        Feedback_macl_2["Count2"]=Feedback_macl_2["unique"].apply(len)
+        Feedback_macl_2["Feedback"] = Feedback_macl_2.apply(
+            lambda row: "Same Flight Multiple time" if row["Count1"] == row["Count2"] else "Duplicate Entries",
+            axis=1
+        )
+        Feedback_macl_2["Weekday"] = Feedback_macl_2["Date"].apply(lambda x: x.strftime('%A'))
 
-    Feedback_macl_2=Feedback_macl_2[["Flight Code", "Feedback","Date","Weekday"]]
+        Feedback_macl_2=Feedback_macl_2[["Flight Code", "Feedback","Date","Weekday"]]
 
-    Feedback_macl_2 = Feedback_macl_2.groupby(["Flight Code","Weekday", "Feedback"]).agg(list).reset_index()
-    Feedback_macl_2["Flight_Date"] = Feedback_macl_2["Date"].apply(group_date_ranges)
-    Feedback_macl_2.drop(columns=["Date"], inplace=True)
-    Feedback_macl_2=Feedback_macl_2.explode("Flight_Date").reset_index(drop=True)
-    Feedback_macl_2
+        Feedback_macl_2 = Feedback_macl_2.groupby(["Flight Code","Weekday", "Feedback"]).agg(list).reset_index()
+        Feedback_macl_2["Flight_Date"] = Feedback_macl_2["Date"].apply(group_date_ranges)
+        Feedback_macl_2.drop(columns=["Date"], inplace=True)
+        Feedback_macl_2=Feedback_macl_2.explode("Flight_Date").reset_index(drop=True)
+    else:
+        Feedback_macl_2 = pd.DataFrame(columns=["Flight ID", "Comment", "Weekday", "Start Date", "End Date"])
     
     return Feedback_macl_1,Feedback_macl_2,macl_expanded
+
+

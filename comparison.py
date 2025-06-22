@@ -30,7 +30,7 @@ def comparison_fun(ramis_int,macl_int, curr_date, Start_Period_date,End_Period_d
         (macl_expanded["Type"] == "Departure")]
 
     macl_expanded.columns=['AIRLINE', 'A/C TYPE', 'ROUTE', 'Flight ID', 'Scheduled Time', 'SEATS',
-       'Category', 'Type', 'Flight Date']
+        'Type', 'Flight Date']
 
 
     macl_expanded["key"] = (
@@ -46,7 +46,7 @@ def comparison_fun(ramis_int,macl_int, curr_date, Start_Period_date,End_Period_d
     merged_df=macl_expanded.merge(expanded_ramis, on=["key"], how='outer',indicator=True)
     
     merged_df.columns=['AIRLINE_macl', 'A/C TYPE_macl', 'ROUTE_macl', 'Flight ID_macl', 'Scheduled Time_macl',
-       'SEATS_macl', 'Category_macl', 'Type_macl',  'Flight Date_macl', 'key',
+       'SEATS_macl',  'Type_macl',  'Flight Date_macl', 'key',
        'Flight ID_ramis', 'Type_ramis', 'Flight Date_ramis', 'Scheduled Time_ramis', "Connecting Flight Entries	ramis","Weekday Count	ramis",
        '_merge']
 
@@ -84,17 +84,23 @@ def comparison_fun(ramis_int,macl_int, curr_date, Start_Period_date,End_Period_d
     clubbed_added["Flight_Date"] = clubbed_added["Flight Date"].apply(group_date_ranges)
     clubbed_added.drop(columns=["Flight Date"], inplace=True)
     clubbed_added=clubbed_added.explode("Flight_Date").reset_index(drop=True)
+    clubbed_added[['Start Date', 'End Date']] = clubbed_added['Flight_Date'].str.split(' - ', expand=True).apply(lambda x: x.str.strip())
+    clubbed_added.drop(["Flight_Date"], axis=1, inplace=True)
 
 
     clubbed_modified = modified.groupby(["Flight ID", "Time_ramis","Time_macl", "Weekday"]).agg(list).reset_index()
     clubbed_modified["Flight_Date"] = clubbed_modified["Flight Date"].apply(group_date_ranges)
     clubbed_modified.drop(columns=["Flight Date"], inplace=True)
     clubbed_modified=clubbed_modified.explode("Flight_Date").reset_index(drop=True)
+    clubbed_modified[['Start Date', 'End Date']] = clubbed_modified['Flight_Date'].str.split(' - ', expand=True).apply(lambda x: x.str.strip())
+    clubbed_modified.drop(["Flight_Date"], axis=1, inplace=True)
 
 
     clubbed_deleted = Deleted.groupby(["Flight ID", "Scheduled Time", "Weekday"]).agg(list).reset_index()
     clubbed_deleted["Flight_Date"] = clubbed_deleted["Flight Date"].apply(group_date_ranges)
     clubbed_deleted.drop(columns=["Flight Date"], inplace=True)
     clubbed_deleted=clubbed_deleted.explode("Flight_Date").reset_index(drop=True)
+    clubbed_deleted[['Start Date', 'End Date']] = clubbed_deleted['Flight_Date'].str.split(' - ', expand=True).apply(lambda x: x.str.strip())
+    clubbed_deleted.drop(["Flight_Date"], axis=1, inplace=True)
 
     return clubbed_added,clubbed_modified,clubbed_deleted

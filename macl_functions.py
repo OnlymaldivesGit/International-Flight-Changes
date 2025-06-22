@@ -90,7 +90,6 @@ def expanded_macl(macl_int):
                     'Flight Code': row['Flight Code'],
                     'Time': row['Time'],
                     'SEATS': row['SEATS'],
-                    'Category': row['Category'],
                     'Type': row['Type'],
                     'Date': current_date.strftime('%Y-%m-%d')
                 })

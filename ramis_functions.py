@@ -17,18 +17,45 @@ def count_weekdays(start, end, weekday_name):
     return 0
 
 
+# def group_date_ranges(dates, expected_gap_days=7):
+#     dates = pd.to_datetime(dates)
+#     dates = pd.Series(dates).sort_values().reset_index(drop=True)
+
+#     groups = []
+#     start = dates[0]
+
+#     for i in range(1, len(dates)):
+#         gap = (dates[i] - dates[i-1]).days
+#         if gap != expected_gap_days:
+#             groups.append(f"{start.date()} - {dates[i-1].date()}")
+#             start = dates[i]
+#     groups.append(f"{start.date()} - {dates.iloc[-1].date()}")
+
+#     return groups
+
+
 def group_date_ranges(dates, expected_gap_days=7):
-    dates = pd.to_datetime(dates)
+    if dates is None or len(dates) == 0:
+        return []
+
+    dates = pd.to_datetime(dates, errors='coerce').dropna()
+    if len(dates) == 0:
+        return []
+
     dates = pd.Series(dates).sort_values().reset_index(drop=True)
+
+    if len(dates) == 1:
+        return [f"{dates[0].date()} - {dates[0].date()}"]
 
     groups = []
     start = dates[0]
 
     for i in range(1, len(dates)):
-        gap = (dates[i] - dates[i-1]).days
+        gap = (dates[i] - dates[i - 1]).days
         if gap != expected_gap_days:
-            groups.append(f"{start.date()} - {dates[i-1].date()}")
+            groups.append(f"{start.date()} - {dates[i - 1].date()}")
             start = dates[i]
+
     groups.append(f"{start.date()} - {dates.iloc[-1].date()}")
 
     return groups
