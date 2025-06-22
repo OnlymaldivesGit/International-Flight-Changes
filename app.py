@@ -8,25 +8,49 @@ from macl_cleaning import macl_cleaning_fun
 from comparison import comparison_fun
 from datetime import date
 
+import hmac
 
 
+USERNAME = st.secrets["auth"]["username"]
+PASSWORD = st.secrets["auth"]["password"]
 
+# USERNAME = "admin"
+# PASSWORD = "1234"
+
+
+if "auth_status" not in st.session_state:
+    st.session_state.auth_status = "unverified"
+
+def check_login():
+    if (
+        hmac.compare_digest(st.session_state.username, USERNAME)
+        and hmac.compare_digest(st.session_state.password, PASSWORD)
+    ):
+        st.session_state.auth_status = "verified"
+    else:
+        st.session_state.auth_status = "failed"
+        st.session_state.password = ""
+
+def show_login():
+    st.title("International Flight Changes Tracker")
+    st.text_input("Username", key="username")
+    st.text_input("Password", type="password", key="password", on_change=check_login)
+
+    if st.session_state.auth_status == "failed":
+        st.error("Incorrect credentials. Please try again.")
+
+def show_logout():
+    st.sidebar.markdown(f"👤 Logged in as `{USERNAME}`")
+    st.sidebar.button("🔓 Logout", on_click=lambda: st.session_state.update({"auth_status": "unverified"}))
+
+# === BLOCK UNAUTHORIZED ACCESS ===
+if st.session_state.auth_status != "verified":
+    show_login()
+    st.stop()
+else:
+    show_logout()
 
 st.set_page_config(page_title="International Flight Changes", layout="wide")
-
-
-curr_date = pd.to_datetime("2025-06-04")
-Start_Period_date = pd.to_datetime("2025-05-30")
-End_Period_date = pd.to_datetime("2025-10-25")
-
-# # Sidebar Navigation
-# selected = option_menu(
-#     menu_title="Main Menu",
-#     options=["Ramis Cleaning", "MACL Cleaning", "International Flight Changes"],
-#     icons=["funnel-fill", "file-earmark-excel", "bar-chart"],
-#     menu_icon="gear", default_index=0
-# )
-
 
 
 
