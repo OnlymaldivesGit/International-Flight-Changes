@@ -171,6 +171,28 @@ if selected == "Ramis data Validator":
                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                     Feedback_ramis_1.to_excel(writer, sheet_name='Feedback 1', index=False)
                     Feedback_ramis_2.to_excel(writer, sheet_name='Feedback 2', index=False)
+
+                    workbook = writer.book
+                    worksheet = writer.sheets['Feedback 1']
+                    rows, cols = Feedback_ramis_1.shape
+
+                    # Dynamically find the column index of "Issues" and convert to Excel letter
+                    issue_col_index = Feedback_ramis_1.columns.get_loc("Issues")
+                    issue_col_letter = chr(65 + issue_col_index)  # Assumes columns < 26
+
+                    highlight_format = workbook.add_format({'bg_color': '#FFC7CE', 'font_color': '#9C0006'})
+
+                    # Apply conditional formatting
+                    worksheet.conditional_format(
+                        f'A2:{chr(65 + cols - 1)}{rows + 1}',
+                        {
+                            'type': 'formula',
+                            'criteria': f'=${issue_col_letter}2=TRUE',
+                            'format': highlight_format
+                        }
+                    )
+
+
                 output.seek(0)
 
                 st.download_button(
@@ -233,6 +255,27 @@ elif selected == "MACL data Validator":
                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                     Feedback_macl_1.to_excel(writer, sheet_name='Feedback 1', index=False)
                     Feedback_macl_2.to_excel(writer, sheet_name='Feedback 2', index=False)
+
+                    workbook = writer.book
+                    worksheet = writer.sheets['Feedback 1']
+                    rows, cols = Feedback_macl_1.shape
+
+                    # Dynamically find the column index of "Issues" and convert to Excel letter
+                    issue_col_index = Feedback_macl_1.columns.get_loc("Issues")
+                    issue_col_letter = chr(65 + issue_col_index)  # Assumes columns < 26
+
+                    highlight_format = workbook.add_format({'bg_color': '#FFC7CE', 'font_color': '#9C0006'})
+
+                    # Apply conditional formatting
+                    worksheet.conditional_format(
+                        f'A2:{chr(65 + cols - 1)}{rows + 1}',
+                        {
+                            'type': 'formula',
+                            'criteria': f'=${issue_col_letter}2=TRUE',
+                            'format': highlight_format
+                        }
+                    )
+
                 output.seek(0)
 
                 st.download_button(

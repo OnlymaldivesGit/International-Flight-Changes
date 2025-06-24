@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import uuid
 
 from ramis_functions import count_weekdays, group_date_ranges
 
@@ -7,7 +8,9 @@ invalid_values = ['ARRTBA', 'DEPTBA', 'DMLED', 'MLE', 'MLED', 'RESARR', 'RESDEP'
 
 
 def ramis_cleaning_fun(ramis_int, curr_date, Start_Period_date,End_Period_date):
+    ramis_int['ID'] = [uuid.uuid4().hex for _ in range(len(ramis_int))]
 
+    initial_copy=ramis_int.copy()
 
     # Possible error Resolutions
 
@@ -30,17 +33,23 @@ def ramis_cleaning_fun(ramis_int, curr_date, Start_Period_date,End_Period_date):
     ramis_int['Invalid Date'] = (ramis_int['Start Date'].isna()) | (ramis_int['End Date'].isna())
     ramis_int['Weekday Count'] = ramis_int.apply(lambda row: count_weekdays(row['Start Date'], row['End Date'], row['Scheduled Day']), axis=1)
     
-    
     ramis_int["Ops status"]=ramis_int["End Date"].apply(lambda x: "OPS COMPLETED" if x<=curr_date else "-" )
     ramis_int["Unmatched Flight Counts"]= (ramis_int['Connecting Flight Entries']) != (ramis_int['Weekday Count'])
 
 
     temp_ramis_int=ramis_int[(ramis_int["Missing Value"]==False) & (ramis_int["Invalid Date"]==False)]
-    Feedback_ramis_1=ramis_int[(ramis_int["Missing Value"]==True) | (ramis_int["Invalid Date"]==True) |  (ramis_int["Unmatched Flight Counts"]==True)]
-    Feedback_ramis_1=Feedback_ramis_1[["Flight ID","Type","Start Date","End Date","Scheduled Day","Missing Value","Invalid Date","Unmatched Flight Counts"]]
+    Feedback_ramis_1=ramis_int.copy()
+    
+    Feedback_ramis_1["Issues"] = (Feedback_ramis_1["Missing Value"] | Feedback_ramis_1["Invalid Date"] | Feedback_ramis_1["Unmatched Flight Counts"])
+    Feedback_ramis_1=Feedback_ramis_1[["Flight ID","Type","Start Date","End Date","Scheduled Day","Missing Value","Invalid Date","Unmatched Flight Counts","Issues","ID",'Weekday Count']]
     Feedback_ramis_1['Start Date'] = Feedback_ramis_1['Start Date'].dt.date.astype(str)
     Feedback_ramis_1['End Date'] = Feedback_ramis_1['End Date'].dt.date.astype(str)
-
+    
+    Feedback_ramis_1=initial_copy.merge(Feedback_ramis_1, on='ID', how='left', suffixes=('', '_y'))
+    l=list(initial_copy.columns)+['Weekday Count',"Missing Value","Invalid Date","Unmatched Flight Counts","Issues"]
+    Feedback_ramis_1=Feedback_ramis_1[l]
+    Feedback_ramis_1.drop(["ID"],axis=1,inplace=True)
+    
     expanded_data = []
     
 

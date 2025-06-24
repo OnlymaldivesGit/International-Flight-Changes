@@ -1,11 +1,16 @@
 import pandas as pd
 import numpy as np
+import uuid
+
 
 from macl_functions import extract_start_end,transform_flt_code,classify_direction,replace_flt_no,split_list,convert_to_time,expanded_macl
 from ramis_functions import group_date_ranges
 
 
 def macl_cleaning_fun(macl_data, curr_date, Start_Period_date,End_Period_date):
+
+    macl_data['ID'] = [uuid.uuid4().hex for _ in range(len(macl_data))]
+    initial_copy=macl_data.copy()
 
     # Step-1 : Convert the Effective Date to Start and End Date and see if any issues
     macl_data[['Start Date', 'End Date']] = macl_data['EFFECTIVE'].apply(extract_start_end)
@@ -42,9 +47,12 @@ def macl_cleaning_fun(macl_data, curr_date, Start_Period_date,End_Period_date):
 
     # First Feedback: Tells about error in Date or Time format
     Feedback_macl_1 = macl_data.copy()
-    Feedback_macl_1=Feedback_macl_1[(Feedback_macl_1["Date error"]==True) | (Feedback_macl_1["Time error"]==True)]
+    Feedback_macl_1["Issues"] = (Feedback_macl_1["Date error"] | Feedback_macl_1["Time error"] )
     Feedback_macl_1.drop(['First_Flt', 'Second_Flt','First_Direction', 'Second_Direction','Direction','Start Date', 'End Date'],axis=1,inplace=True)
-
+    Feedback_macl_1=initial_copy.merge(Feedback_macl_1, on='ID', how='left', suffixes=('', '_y'))
+    l=list(initial_copy.columns)+["Date error","Time error","Issues"]
+    Feedback_macl_1=Feedback_macl_1[l]
+    Feedback_macl_1.drop(["ID"],axis=1,inplace=True)
 
     # Step-6 : Seprate Arrivals and Departure and vstack them   
 
