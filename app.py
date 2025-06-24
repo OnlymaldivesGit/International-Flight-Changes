@@ -119,7 +119,7 @@ def changes(df1,df2):
 
 # === Main Views ===
 if selected == "Ramis data Validator":
-    st.title("🧹 RAMIS Data Cleaner")
+    st.title("🔎 Ramis data Validator")
     uploaded_file = st.file_uploader("Upload RAMIS Excel File", type=["xlsx"])
 
     col1, col2 = st.columns(2)
@@ -180,7 +180,7 @@ if selected == "Ramis data Validator":
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
 elif selected == "MACL data Validator":
-    st.title("🧹 MACL Data Cleaner")
+    st.title("🔎 MACL data Validator")
     uploaded_file = st.file_uploader("Upload MACL Excel File", type=["xlsx"])
 
 
@@ -243,9 +243,9 @@ elif selected == "MACL data Validator":
                 )
 
 elif selected == "Schedule Change Tracker":
-    st.title("🧹 International Flight Changes")
+    st.title("🧠 International Flight Changes")
     uploaded_file_1 = st.file_uploader("Upload Ramis Excel File", type=["xlsx"])
-    uploaded_file_2 = st.file_uploader("Upload MACL File", type=["xlsx"])
+    uploaded_file_2 = st.file_uploader("Upload MACL Excel File", type=["xlsx"])
 
     col1, col2 = st.columns(2)
     with col1:
