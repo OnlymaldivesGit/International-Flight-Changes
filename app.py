@@ -11,11 +11,11 @@ from datetime import date
 import hmac
 
 
-USERNAME = st.secrets["auth"]["username"]
-PASSWORD = st.secrets["auth"]["password"]
+# USERNAME = st.secrets["auth"]["username"]
+# PASSWORD = st.secrets["auth"]["password"]
 
-# USERNAME = "admin"
-# PASSWORD = "1234"
+USERNAME = "tmaadmin"
+PASSWORD = "int_res@2025"
 
 
 if "auth_status" not in st.session_state:

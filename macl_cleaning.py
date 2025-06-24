@@ -137,6 +137,9 @@ def macl_cleaning_fun(macl_data, curr_date, Start_Period_date,End_Period_date):
         Feedback_macl_2["Flight_Date"] = Feedback_macl_2["Date"].apply(group_date_ranges)
         Feedback_macl_2.drop(columns=["Date"], inplace=True)
         Feedback_macl_2=Feedback_macl_2.explode("Flight_Date").reset_index(drop=True)
+        Feedback_macl_2[['Start Date', 'End Date']] = Feedback_macl_2['Flight_Date'] \
+            .str.split(' - ', expand=True).apply(lambda x: x.str.strip())
+        Feedback_macl_2.drop(["Flight_Date"], axis=1, inplace=True)
     else:
         Feedback_macl_2 = pd.DataFrame(columns=["Flight ID", "Comment", "Weekday", "Start Date", "End Date"])
     
