@@ -136,16 +136,9 @@ def macl_cleaning_fun(macl_data, curr_date, Start_Period_date,End_Period_date):
     Feedback_macl_3["Weekday"] = Feedback_macl_3["Date"].apply(lambda x: x.strftime('%A'))
     Feedback_macl_3=Feedback_macl_3[["Flight Code","ROUTE","Time","Weekday","Type"]].drop_duplicates()
 
-
-
-
-
-    
-
-
     macl_expanded=macl_expanded[macl_expanded["status"]!="Cancelled"]
     macl_expanded.drop(["status"],axis=1,inplace=True)
-    
+
     # Step-9 : Split rows on Date level
     Feedback_macl_2=macl_expanded[["Flight Code","Time","Date"]]
     Feedback_macl_2 = Feedback_macl_2.groupby(["Flight Code", "Date"])[["Time"]].agg(list).reset_index()
