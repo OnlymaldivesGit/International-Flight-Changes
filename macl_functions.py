@@ -91,6 +91,7 @@ def expanded_macl(macl_int):
                     'Time': row['Time'],
                     'SEATS': row['SEATS'],
                     'Type': row['Type'],
+                    'status': row['status'],
                     'Date': current_date.strftime('%Y-%m-%d')
                 })
             current_date += timedelta(days=1)

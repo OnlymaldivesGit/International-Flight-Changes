@@ -16,8 +16,7 @@ def macl_cleaning_fun(macl_data, curr_date, Start_Period_date,End_Period_date):
     macl_data[['Start Date', 'End Date']] = macl_data['EFFECTIVE'].apply(extract_start_end)
     macl_data['Start Date'] = pd.to_datetime(macl_data['Start Date'], format='%d.%m.%y', dayfirst=True, errors='coerce')
     macl_data['End Date'] = pd.to_datetime(macl_data['End Date'], format='%d.%m.%y', dayfirst=True, errors='coerce')
-    macl_data["Date error"]=macl_data["Start Date"].isna() | macl_data["End Date"].isna()
-
+    macl_data["Date error"] = (macl_data["Start Date"].isna() | macl_data["End Date"].isna() |(macl_data["End Date"] < macl_data["Start Date"]))
 
     # Step-2 : Convert the Text Time to STA and STD and see if any issues
     macl_data['STA'] = macl_data['STA'].astype(str).str.strip()
@@ -58,21 +57,21 @@ def macl_cleaning_fun(macl_data, curr_date, Start_Period_date,End_Period_date):
 
     arrivals_1 = macl_data[macl_data['First_Direction'] == 'Arrival'][[
     'AIRLINE', 'DAYS OF OPS', 'A/C TYPE', 'ROUTE', 'SEATS',
-      'Start Date', 'End Date', 'First_Flt', 'STA'
+      'Start Date', 'End Date', 'First_Flt', 'STA',"status"
     ]].copy()
     arrivals_1.columns = [
         'AIRLINE', 'DAYS OF OPS', 'A/C TYPE', 'ROUTE', 'SEATS',
-          'Start Date', 'End Date', 'Flight Code', 'Time'
+          'Start Date', 'End Date', 'Flight Code', 'Time',"status"
     ]
     arrivals_1['Type'] = 'Arrival'
 
     arrivals_2 = macl_data[macl_data['Second_Direction'] == 'Arrival'][[
         'AIRLINE', 'DAYS OF OPS', 'A/C TYPE', 'ROUTE', 'SEATS',
-         'Start Date', 'End Date', 'Second_Flt', 'STA'
+         'Start Date', 'End Date', 'Second_Flt', 'STA',"status"
     ]].copy()
     arrivals_2.columns = [
         'AIRLINE', 'DAYS OF OPS', 'A/C TYPE', 'ROUTE', 'SEATS',
-          'Start Date', 'End Date', 'Flight Code', 'Time'
+          'Start Date', 'End Date', 'Flight Code', 'Time',"status"
     ]
     arrivals_2['Type'] = 'Arrival'
 
@@ -81,21 +80,21 @@ def macl_cleaning_fun(macl_data, curr_date, Start_Period_date,End_Period_date):
     # DEPARTURES
     departures_1 = macl_data[macl_data['First_Direction'] == 'Departure'][[
         'AIRLINE', 'DAYS OF OPS', 'A/C TYPE', 'ROUTE', 'SEATS',
-          'Start Date', 'End Date', 'First_Flt', 'STD'
+          'Start Date', 'End Date', 'First_Flt', 'STD',"status"
     ]].copy()
     departures_1.columns = [
         'AIRLINE', 'DAYS OF OPS', 'A/C TYPE', 'ROUTE', 'SEATS',
-         'Start Date', 'End Date', 'Flight Code', 'Time'
+         'Start Date', 'End Date', 'Flight Code', 'Time',"status"
     ]
     departures_1['Type'] = 'Departure'
 
     departures_2 = macl_data[macl_data['Second_Direction'] == 'Departure'][[
         'AIRLINE', 'DAYS OF OPS', 'A/C TYPE', 'ROUTE', 'SEATS',
-          'Start Date', 'End Date', 'Second_Flt', 'STD'
+          'Start Date', 'End Date', 'Second_Flt', 'STD',"status"
     ]].copy()
     departures_2.columns = [
         'AIRLINE', 'DAYS OF OPS', 'A/C TYPE', 'ROUTE', 'SEATS',
-          'Start Date', 'End Date', 'Flight Code', 'Time'
+          'Start Date', 'End Date', 'Flight Code', 'Time',"status"
     ]
     departures_2['Type'] = 'Departure'
 
@@ -124,6 +123,26 @@ def macl_cleaning_fun(macl_data, curr_date, Start_Period_date,End_Period_date):
     # Step-8 : Split rows on Date level
     macl_expanded=expanded_macl(macl_data)
 
+    cols_to_check = [col for col in macl_expanded.columns if col != 'status']
+    duplicated_rows = macl_expanded[macl_expanded.duplicated(subset=cols_to_check, keep=False)]
+    df_1 = duplicated_rows[duplicated_rows["status"] == "Cancelled"]
+    duplicated_rows = duplicated_rows[duplicated_rows["status"] != "Cancelled"]
+
+    duplicated_rows["Has_Duplicate"] = duplicated_rows[cols_to_check].apply(
+        lambda row: df_1[cols_to_check].apply(lambda x: x.equals(row), axis=1).any(), axis=1
+    )
+
+    Feedback_macl_3=duplicated_rows[duplicated_rows["Has_Duplicate"]==True]
+    Feedback_macl_3["Weekday"] = Feedback_macl_3["Date"].apply(lambda x: x.strftime('%A'))
+    Feedback_macl_3=Feedback_macl_3[["Flight Code","ROUTE","Time","Weekday","Type"]].drop_duplicates()
+
+
+
+
+
+    
+
+
 
     # Step-9 : Split rows on Date level
     Feedback_macl_2=macl_expanded[["Flight Code","Time","Date"]]
@@ -151,6 +170,6 @@ def macl_cleaning_fun(macl_data, curr_date, Start_Period_date,End_Period_date):
     else:
         Feedback_macl_2 = pd.DataFrame(columns=["Flight ID", "Comment", "Weekday", "Start Date", "End Date"])
     
-    return Feedback_macl_1,Feedback_macl_2,macl_expanded
+    return Feedback_macl_1,Feedback_macl_2,Feedback_macl_3,macl_expanded
 
 

@@ -106,8 +106,8 @@ def clean_ramis(df):
     return Feedback_ramis_1,Feedback_ramis_2,expanded_ramis
 
 def clean_macl(df):
-    Feedback_macl_1,Feedback_macl_2,macl_expanded=macl_cleaning_fun(df, curr_date, Start_Period_date,End_Period_date )
-    return Feedback_macl_1,Feedback_macl_2,macl_expanded
+    Feedback_macl_1,Feedback_macl_2,Feedback_macl_3,macl_expanded=macl_cleaning_fun(df, curr_date, Start_Period_date,End_Period_date )
+    return Feedback_macl_1,Feedback_macl_2,Feedback_macl_3,macl_expanded
 
 def changes(df1,df2):
     clubbed_added,clubbed_modified,clubbed_deleted=comparison_fun(df1,df2, curr_date, Start_Period_date,End_Period_date)
@@ -226,7 +226,7 @@ elif selected == "MACL data Validator":
         df = pd.read_excel(uploaded_file,sheet_name="Data")
         if st.button("Execute Cleanup"):
             with st.spinner("Checking MACL data..."):
-                Feedback_macl_1,Feedback_macl_2,macl_expanded=clean_macl(df)
+                Feedback_macl_1,Feedback_macl_2,Feedback_macl_3,macl_expanded=clean_macl(df)
 
                 st.markdown("The table below highlights data points with errors"
                 " in date and time values, formatting issues, or data discrepancies.")
@@ -248,6 +248,17 @@ elif selected == "MACL data Validator":
                 with st.expander("📝 Flight Duplication Log", expanded=True):
                     show_aggrid(Feedback_macl_2)
 
+
+                st.markdown("<br>", unsafe_allow_html=True)
+
+                st.markdown(
+                "The table below lists of Flights which have got cancelled ",
+                unsafe_allow_html=True
+                )
+                
+                with st.expander("📝 Flight Cancelled Log", expanded=True):
+                    show_aggrid(Feedback_macl_3)
+
                 
                 
                 
@@ -255,6 +266,7 @@ elif selected == "MACL data Validator":
                 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
                     Feedback_macl_1.to_excel(writer, sheet_name='Feedback 1', index=False)
                     Feedback_macl_2.to_excel(writer, sheet_name='Feedback 2', index=False)
+                    Feedback_macl_3.to_excel(writer, sheet_name='Feedback 3', index=False)
 
                     workbook = writer.book
                     worksheet = writer.sheets['Feedback 1']
