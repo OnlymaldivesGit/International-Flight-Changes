@@ -252,7 +252,7 @@ elif selected == "MACL data Validator":
                 st.markdown("<br>", unsafe_allow_html=True)
 
                 st.markdown(
-                "The table below lists of Flights which have got cancelled ",
+                "The table below lists of Flights which have got cancelled but reappearing in valid rows",
                 unsafe_allow_html=True
                 )
                 
