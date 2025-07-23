@@ -8,7 +8,7 @@ from datetime import time
 
 def comparison_fun(ramis_int,macl_int, curr_date, Start_Period_date,End_Period_date):
     _, _,expanded_ramis=ramis_cleaning_fun(ramis_int, curr_date, Start_Period_date,End_Period_date )
-    _, _,macl_expanded=macl_cleaning_fun(macl_int, curr_date, Start_Period_date,End_Period_date)
+    _, _,_,macl_expanded=macl_cleaning_fun(macl_int, curr_date, Start_Period_date,End_Period_date)
 
 
     expanded_ramis = expanded_ramis[expanded_ramis["Flight Date"] > curr_date]
@@ -19,7 +19,8 @@ def comparison_fun(ramis_int,macl_int, curr_date, Start_Period_date,End_Period_d
             (expanded_ramis["Type"] == "Departure")]
     expanded_ramis=expanded_ramis[expanded_ramis['Connecting Flight Entries']==expanded_ramis['Weekday Count']]
 
-
+    macl_expanded=macl_expanded[macl_expanded["status"]!="Cancelled"]
+    macl_expanded.drop(["status"],axis=1,inplace=True)
     macl_expanded["Date"] = pd.to_datetime(macl_expanded["Date"])
     macl_expanded['Time'] = pd.to_datetime(macl_expanded['Time'], format='%H:%M:%S').dt.time
     macl_expanded = macl_expanded[macl_expanded["Date"] > curr_date]
